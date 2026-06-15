@@ -78,7 +78,7 @@
 
 (defn in-period? [start end transaction]
   (let [date (:date transaction)]
-    (and date
+    (and (string? date)
          (not (neg? (compare date start)))
          (not (pos? (compare date end))))))
 

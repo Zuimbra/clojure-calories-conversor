@@ -4,6 +4,7 @@
             [compojure.route :as route]
             [ring.adapter.jetty :refer [run-jetty]]
             [ring.middleware.params :refer [wrap-params]]
+            [clojure.string :as str]
             [conversor.state :as state]
             [conversor.external :as external]))
 
@@ -21,12 +22,21 @@
     (catch Exception _
       {})))
 
+(defn param-value [params key-name]
+  (let [value (or (get params key-name)
+                  (get params (keyword key-name)))]
+    (when value
+      (clojure.string/trim value))))
+
 (defn get-transactions-from-request [request]
   (let [params (:params request)
-        start (get params "start")
-        end (get params "end")
+        start (param-value params "start")
+        end (param-value params "end")
         transactions (state/all-transactions)]
-    (if (and start end)
+    (if (and start
+             end
+             (not (clojure.string/blank? start))
+             (not (clojure.string/blank? end)))
       (state/transactions-in-period start end transactions)
       transactions)))
 
