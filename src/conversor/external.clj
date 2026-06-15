@@ -3,10 +3,6 @@
             [cheshire.core :as json]
             [clojure.string :as str]))
 
-;; =========================
-;; Funcoes auxiliares
-;; =========================
-
 (defn parse-json [response]
   (json/parse-string (:body response) true))
 
@@ -22,13 +18,7 @@
 (defn round-calories [value]
   (long (Math/round (double value))))
 
-(defn value-of [m k]
-  (or (get m k)
-      (get m (name k))))
-
-;; =========================
 ;; USDA - alimentos
-;; =========================
 
 (def usda-url "https://api.nal.usda.gov/fdc/v1/foods/search")
 
@@ -55,14 +45,12 @@
          :error (:body response)}))))
 
 (defn energy-nutrient? [nutrient]
-  (= (value-of nutrient :nutrientName) "Energy"))
+  (= (:nutrientName nutrient) "Energy"))
 
 (defn food-energy-per-100g [food-data]
-  (let [foods (value-of food-data :foods)
-        first-food (first foods)
-        nutrients (value-of first-food :foodNutrients)
+  (let [nutrients (-> food-data :foods first :foodNutrients)
         energy (some #(when (energy-nutrient? %)
-                        (value-of % :value))
+                        (:value %))
                      nutrients)]
     (to-number energy)))
 
@@ -80,11 +68,9 @@
           {:ok false
            :error "Nao foi possivel obter calorias desse alimento."})))))
 
-;; =========================
 ;; API Ninjas - exercicios
-;; =========================
 
-(def api-ninjas-base-url "https://api.api-ninjas.com/v1")
+(def api-ninjas-url "https://api.api-ninjas.com/v1")
 
 (defn api-ninjas-key []
   (System/getenv "API_NINJAS_KEY"))
@@ -97,7 +83,7 @@
     {:ok false
      :error "API_NINJAS_KEY nao configurada."}
 
-    (let [response (http/get (str api-ninjas-base-url endpoint)
+    (let [response (http/get (str api-ninjas-url endpoint)
                              {:headers {"X-Api-Key" (api-ninjas-key)}
                               :query-params params
                               :throw-exceptions false})]
@@ -120,7 +106,7 @@
       result
 
       (let [first-result (first (:data result))
-            total (to-number (value-of first-result :total_calories))]
+            total (to-number (:total_calories first-result))]
         (if (pos? total)
           {:ok true
            :calories (round-calories total)}

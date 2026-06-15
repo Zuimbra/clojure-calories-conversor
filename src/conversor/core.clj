@@ -3,5 +3,5 @@
   (:gen-class))
 
 (defn -main [& args]
-  (println "API running at http://localhost:3000")
+  (println "Server running at http://localhost:3000")
   (api/start-server))
