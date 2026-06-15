@@ -6,19 +6,21 @@
 (defn create-user [data]
   {:id (java.util.UUID/randomUUID)
    :name (:name data)
+   :email (:email data)
    :age (:age data)
-   :height (:height data)
    :weight (:weight data)
+   :height (:height data)
    :gender (:gender data)})
 
 (defn valid-user? [user]
   (and (not-empty (:name user))
+       (not-empty (:email user))
        (number? (:age user))
        (pos? (:age user))
-       (number? (:height user))
-       (pos? (:height user))
        (number? (:weight user))
-       (pos? (:weight user))))
+       (pos? (:weight user))
+       (number? (:height user))
+       (pos? (:height user))))
 
 (defn save-user! [user]
   (reset! user-db user)
@@ -27,11 +29,11 @@
 (defn get-user []
   @user-db)
 
-(defn food-transaction [food grams calories date]
+(defn food-transaction [food quantity calories date]
   {:id (java.util.UUID/randomUUID)
    :kind :food
    :food food
-   :grams grams
+   :quantity quantity
    :calories calories
    :date date})
 
@@ -47,7 +49,7 @@
   (swap! transactions-db conj transaction)
   transaction)
 
-(defn get-transactions []
+(defn all-transactions []
   @transactions-db)
 
 (defn food? [transaction]
@@ -60,10 +62,9 @@
   (or (:calories transaction) 0))
 
 (defn sum-by [predicate transactions]
-  (reduce + 0 (
-        map calories-of 
-            (filter predicate transactions)
-  )))
+  (reduce + 0
+          (map calories-of
+               (filter predicate transactions))))
 
 (defn gained-calories [transactions]
   (sum-by food? transactions))
@@ -77,8 +78,9 @@
 
 (defn in-period? [start end transaction]
   (let [date (:date transaction)]
-        and (not (neg? (compare date start)))
-            (not (pos? (compare date end)))))
+    (and date
+         (not (neg? (compare date start)))
+         (not (pos? (compare date end))))))
 
 (defn transactions-in-period [start end transactions]
   (filter #(in-period? start end %) transactions))
@@ -88,7 +90,7 @@
    :lost (lost-calories transactions)
    :balance (balance transactions)})
 
-(defn reset-dn! []
+(defn reset-db! []
   (reset! user-db nil)
-  (swap! transactions-db conj '())
+  (reset! transactions-db '())
   {:message "Database reset."})

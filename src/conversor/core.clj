@@ -1,1 +1,7 @@
-(ns conversor.core)
+(ns conversor.core
+  (:require [conversor.api :as api])
+  (:gen-class))
+
+(defn -main [& args]
+  (println "API running at http://localhost:3000")
+  (api/start-server))
